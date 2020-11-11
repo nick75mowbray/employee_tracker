@@ -1,22 +1,15 @@
 // import components
 const inquirer = require("inquirer");
 const mysql = require("mysql");
-
-// declare global variables
-let departmentsArr = [];
-let rolesArr = [];
-let employeesArr = [];
+const cTable = require('console.table');
 
 // mysql connection ------
 var connection = mysql.createConnection({
     host: "localhost",
-  
     // Your port; if not 3306
     port: 3306,
-  
     // Your username
     user: "root",
-  
     // Your password
     password: "Mylocalhost34",
     database: "employee_tracker"
@@ -56,14 +49,107 @@ function runEmployeeTracker(){
       new inquirer.Separator("\n-------Budget-------"),
       "view budget"]
   }).then(function(answers){
-    if (answers.menu=="add department"){
-      addDepartment();
-    } else if (answers.menu=="add role"){
-      addRole();
+    switch (answers.menu){
+      case "view employees":
+        viewEmployees();
+        break;
+      default:
+        break;
     }
   })
 }
 
+// function view employees
+function viewEmployees(){
+  inquirer.prompt({
+    name: "sortby",
+    message: "\nview employees by:\n",
+    type: "list",
+    choices: [
+      "view all employees",
+      "view employees by manager"]
+  }).then(function(answers){
+    if (answers.sortby==="view all employees"){
+      viewAllEmployees();
+    } else {
+      viewEmployeesByManager();
+    }
+  });
+}
+
+// function to view all employees
+function viewAllEmployees(){
+  connection.query("SELECT * FROM employee", function(err, res) {
+    if (err) throw err;
+    // Log all results of the SELECT statement using console.table
+    let employeetable = [];
+    
+    for (let i = 0; i < res.length; i++){
+      let tableRow = {};
+      tableRow.id = res[i].id;
+      tableRow.name = (res[i].first_name)+" "+(res[i].last_name);
+      employeetable.push(tableRow);
+    }
+    const table = cTable.getTable(employeetable);
+    // console.log(`res from view all employees ${employeetable}`);
+    console.log(table);
+  });
+};
+
+// function to view employees by manager
+function viewEmployeesByManager(){
+  connection.query("SELECT * FROM manager", function(err, res) {
+    if (err) throw err;
+    // Log all results of the SELECT statement using console.table
+    let managertable = [];
+    
+    for (let i = 0; i < res.length; i++){
+      let tableRow = {};
+      tableRow.id = res[i].id;
+      tableRow.firstname = res[i].manager_first_name;
+      tableRow.lastname = res[i].manager_last_name;
+      managertable.push(tableRow);
+    }
+    const table = cTable.getTable(managertable);
+    // console.log(`res from view all employees ${employeetable}`);
+    console.log(table);
+    inquirer
+    .prompt([
+      {
+        name: "choice",
+        type: "list",
+        choices: function() {
+          var choiceArray = [];
+          for (var i = 0; i < managertable.length; i++) {
+            choiceArray.push((managertable[i].firstname)+" "+(managertable[i].lastname));
+          }
+          return choiceArray;
+        },
+        message: "Managers: "
+      }
+    ])
+    .then(function(answer) {
+      // get the information of the chosen item
+      var chosenManager;
+      for (var i = 0; i < res.length; i++) {
+        if ((res[i].manager_first_name+" "+res[i].manager_last_name) === answer.choice) {
+          chosenManager = res[i];
+        }
+      }
+      connection.query(`SELECT * FROM employee WHERE manager_id=${chosenManager.id}`, 
+      function(err, res) {
+        if (err) throw err;
+        let tableData = [];
+        for (let i = 0; i < res.length; i++){
+          tableData.push(res[i]);
+        }
+        const table = cTable.getTable(tableData);
+    // console.log(`res from view all employees ${employeetable}`);
+    console.log(table);
+      });
+  });
+});
+}
 // add department
 function addDepartment(){
   console.log(`\n`);
@@ -160,4 +246,30 @@ function getDepartments(){
       return departmentsArr;
   });
 
+};
+
+function mysqlInsert(table_name, data_object){
+  var query = connection.query(
+      `INSERT INTO ${table_name} SET ?`,
+      data_object,
+      function(err, res) {
+        if (err) throw err;
+        console.log(`\nsuccessfully added into ${table_name}\n`);
+      }
+    );
+    // logs the actual query being run
+    console.log(query.sql);    
+};
+
+function mysqlDelete(table_name, condition, data){
+  var query = connection.query(
+      `DELETE FROM ${table_name} WHERE ${condition}=?`,
+      data,
+      function(err, res) {
+        if (err) throw err;
+        console.log(`\n${data} deleted from ${table_name}\n`);
+      }
+    );
+    // logs the actual query being run
+    console.log(query.sql);    
 };
