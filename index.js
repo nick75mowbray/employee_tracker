@@ -34,16 +34,27 @@ function runEmployeeTracker(){
   console.log(`\n`);
   inquirer.prompt({
     name: "menu",
-    message: "Welcome to Employee Tracker",
+    message: "Welcome to Employee Tracker\n",
     type: "list",
+    pageSize: 25,
     choices: [
-      "add department", 
-      "add role",
-      "add employee",
-      "view deparments",
-      "view roles",
-      "view employees",
-      "edit employee roles"]
+      new inquirer.Separator("-----Employees-----"),
+      "view employees", 
+      "edit employees",
+      "add employees",
+      "delete employees",
+      new inquirer.Separator("\n-------Roles-------"),
+      "view roles", 
+      "edit roles",
+      "add roles",
+      "delete roles",
+      new inquirer.Separator("\n----Departments----"),
+      "view departments", 
+      "edit departments",
+      "add departments",
+      "delete departments",
+      new inquirer.Separator("\n-------Budget-------"),
+      "view budget"]
   }).then(function(answers){
     if (answers.menu=="add department"){
       addDepartment();
