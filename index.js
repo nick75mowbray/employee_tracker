@@ -100,19 +100,6 @@ function viewAllEmployees(){
 function viewEmployeesByManager(){
   connection.query("SELECT * FROM manager", function(err, res) {
     if (err) throw err;
-    // Log all results of the SELECT statement using console.table
-    let managertable = [];
-    
-    for (let i = 0; i < res.length; i++){
-      let tableRow = {};
-      tableRow.id = res[i].id;
-      tableRow.firstname = res[i].manager_first_name;
-      tableRow.lastname = res[i].manager_last_name;
-      managertable.push(tableRow);
-    }
-    const table = cTable.getTable(managertable);
-    // console.log(`res from view all employees ${employeetable}`);
-    console.log(table);
     inquirer
     .prompt([
       {
@@ -120,12 +107,12 @@ function viewEmployeesByManager(){
         type: "list",
         choices: function() {
           var choiceArray = [];
-          for (var i = 0; i < managertable.length; i++) {
-            choiceArray.push((managertable[i].firstname)+" "+(managertable[i].lastname));
+          for (var i = 0; i < res.length; i++) {
+            choiceArray.push((res[i].manager_first_name)+" "+(res[i].manager_last_name));
           }
           return choiceArray;
         },
-        message: "Managers: "
+        message: "\nManagers: "
       }
     ])
     .then(function(answer) {
@@ -136,16 +123,19 @@ function viewEmployeesByManager(){
           chosenManager = res[i];
         }
       }
-      connection.query(`SELECT * FROM employee WHERE manager_id=${chosenManager.id}`, 
+      connection.query(`SELECT * FROM employee WHERE manager_id=?`, ""+chosenManager.id+"", 
       function(err, res) {
         if (err) throw err;
         let tableData = [];
+        let tableRow = {};
         for (let i = 0; i < res.length; i++){
-          tableData.push(res[i]);
+          tableRow.id = res[i].id;
+          tableRow.name = (res[i].first_name+" "+res[i].last_name);
+          tableData.push(tableRow);
         }
         const table = cTable.getTable(tableData);
     // console.log(`res from view all employees ${employeetable}`);
-    console.log(table);
+    console.log("\n"+table);
       });
   });
 });
