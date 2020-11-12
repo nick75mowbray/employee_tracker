@@ -68,7 +68,6 @@ function viewDB(table_name){
     if (err) throw err;
     // Log all results of the SELECT statement using console.table
     let mytable = [];
-    
     for (let i = 0; i < res.length; i++){
       let tableRow = {};
       tableRow = res[i];
@@ -115,7 +114,7 @@ function viewAllEmployees(){
       mytable.push(tableRow);
     }
     const table = cTable.getTable(mytable);
-    console.log(table);
+    console.log(`\n${table}`);
   });
 };
 
@@ -163,6 +162,98 @@ function viewEmployeesByManager(){
   });
 });
 }
+
+// function to edit employees
+function editEmployees(){
+  connection.query("SELECT * FROM employee", function(err, res) {
+    if (err) throw err;
+    inquirer
+    .prompt([
+      {
+        name: "choice",
+        type: "list",
+        choices: function() {
+          var choiceArray = [];
+          for (var i = 0; i < res.length; i++) {
+            choiceArray.push((res[i].first_name)+" "+(res[i].last_name));
+          }
+          return choiceArray;
+        },
+        message: "\nchoose an employee to edit: "
+      }
+    ])
+    .then(function(answer) {
+      let chosenEmployee;
+      for (var i = 0; i < res.length; i++) {
+        if ((res[i].first_name+" "+res[i].last_name) === answer.choice) {
+          chosenEmployee = res[i];
+        }
+      }
+      // declare variables
+      let roleData = "";
+      let roleArr = [];
+      let managerData = "";
+      let managerArr = [];
+      connection.query("SELECT * FROM role", function(err, res) {
+        if (err) throw err;
+        roleData = res;
+        for (var i = 0; i < res.length; i++) {
+          roleArr.push(res[i].title);
+        }
+      });
+      connection.query("SELECT * FROM manager", function(err, res) {
+        if (err) throw err;
+        managerData = res;
+        for (var i = 0; i < res.length; i++) {
+          managerArr.push(res[i].manager_first_name+" "+res[i].manager_last_name);
+        }
+      });
+      inquirer.prompt([
+        {name: "firstname",
+        message: "\nfirst name: ",
+        type: "input",
+        default: chosenEmployee.first_name},
+        {name: "lastname",
+        message: "last name: ",
+        type: "input",
+        default: chosenEmployee.last_name},
+        {name: "role",
+        message: "role: ",
+        type: "list",
+        choices: roleArr},
+        {name: "manager",
+        message: "manager: ",
+        type: "list",
+        choices: managerArr}
+      ])
+      .then(function(answer){
+        // add data to object
+        let updateEmployee = {};
+        updateEmployee.first_name = answer.firstname;
+        updateEmployee.last_name = answer.lastname;
+        for (let i = 0; i < roleData.length; i++){
+          if (answer.role === roleData[i].title){
+            updateEmployee.role_id = roleData[i].id;
+          }
+        }
+        for (let i = 0; i < managerData.length; i++){
+          if (answer.manager === managerData[i].manager_first_name+" "+managerData[i].manager_last_name){
+            updateEmployee.manager_id = managerData[i].id;
+          }
+        }
+        connection.query( 
+          `UPDATE employee SET first_name='${updateEmployee.first_name}', 
+          last_name='${updateEmployee.last_name}', role_id='${updateEmployee.role_id}', manager_id='${updateEmployee.manager_id}' WHERE id='${chosenEmployee.id}'`, 
+        function(err, res) {
+          if (err) throw err;
+          console.log("successfully updated employee")
+        });
+      })
+
+  });
+});
+};
+
 // add department
 function addDepartment(){
   console.log(`\n`);
