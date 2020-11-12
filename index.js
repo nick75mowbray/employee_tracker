@@ -19,6 +19,7 @@ var connection = mysql.createConnection({
     if (err) throw err;
     console.log("connected as id " + connection.threadId + "\n");
     // run program
+    
   runEmployeeTracker();
 });
 
@@ -53,10 +54,29 @@ function runEmployeeTracker(){
       case "view employees":
         viewEmployees();
         break;
+      case "edit employees":
+        editEmployees();
+        break;
       default:
         break;
     }
   })
+}
+// generic functions
+function viewDB(table_name){
+  connection.query(`SELECT * FROM ${table_name}`, function(err, res) {
+    if (err) throw err;
+    // Log all results of the SELECT statement using console.table
+    let mytable = [];
+    
+    for (let i = 0; i < res.length; i++){
+      let tableRow = {};
+      tableRow = res[i];
+      mytable.push(tableRow);
+    }
+    const table = cTable.getTable(mytable);
+    console.log(table);
+  });
 }
 
 // function view employees
@@ -79,19 +99,22 @@ function viewEmployees(){
 
 // function to view all employees
 function viewAllEmployees(){
-  connection.query("SELECT * FROM employee", function(err, res) {
+  // connection.query("SELECT * FROM employee", function(err, res) {
+  connection.query(`
+      SELECT employee.id, employee.first_name, employee.last_name, 
+      role.title, manager.manager_first_name, manager_last_name
+      FROM ((employee
+      INNER JOIN role ON employee.role_id = role.id)
+      INNER JOIN manager ON employee.manager_id = manager.id);`, function(err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement using console.table
-    let employeetable = [];
-    
+    let mytable = [];
     for (let i = 0; i < res.length; i++){
       let tableRow = {};
-      tableRow.id = res[i].id;
-      tableRow.name = (res[i].first_name)+" "+(res[i].last_name);
-      employeetable.push(tableRow);
+      tableRow = res[i];
+      mytable.push(tableRow);
     }
-    const table = cTable.getTable(employeetable);
-    // console.log(`res from view all employees ${employeetable}`);
+    const table = cTable.getTable(mytable);
     console.log(table);
   });
 };
