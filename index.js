@@ -91,13 +91,31 @@ function viewEmployees(){
     if (answers.sortby==="view all employees"){
       viewDB("employee");
     } else {
-      viewDB("employee", "manager_id", "employees ordered by manager: ");
+      // viewDB("employee", "manager_id", "employees ordered by manager: ");
+      viewEmployeesManager();
     }
   });
 }
 function viewEmployeesManager(){
-  connection.query("SELECT * FROM employee", function(err, res) {
+  // declare variables
+  let employeeData = "";
+  // get data from role table
+  connection.query("SELECT * FROM employee ORDER BY manager_id", function(err, res) {
     if (err) throw err;
+    employeeData = res;
+    for (var i = 0; i < employeeData.length; i++) {
+      for (let j = 0; j < employeeData.length; j++){
+        if (employeeData[i].manager_id===employeeData[j].id){
+          if (employeeData[i].manager_id=="null"){
+            employeeData[i].manager_name = "No Manager";
+          } else{
+              employeeData[i].manager_name = employeeData[j].first_name+" "+employeeData[j].last_name;
+          }
+        }
+      }
+    }
+    outputTable(employeeData, "employees ordered by manager: ");
+  });
 }
 // function to edit employees
 function editEmployees(){
