@@ -4,6 +4,7 @@ const mysql = require("mysql");
 const cTable = require('console.table');
 const employee = require("./employeeFunctions.js");
 const genericFunc = require("./genericFunctions.js");
+const role = require("./roleFunctions.js");
 
 // mysql connection ------
 var connection = mysql.createConnection({
@@ -50,13 +51,22 @@ function runEmployeeTracker(){
   }).then(function(answers){
     switch (answers.menu){
       case "view employees":
-        employee.viewEmployees();
+        employee.view();
         break;
       case "edit employees":
-        employee.editEmployees();
+        employee.edit();
         break;
       case "add employees":
-        employee.addEmployees();
+        employee.add();
+        break;
+      case "delete employees":
+        employee.delete();
+        break;
+      case "view roles":
+        genericFunc.viewDB("role");
+        break;
+      case "edit roles":
+        role.edit();
         break;
       default:
         break;
@@ -175,15 +185,4 @@ function mysqlInsert(table_name, data_object){
     console.log(query.sql);    
 };
 
-function mysqlDelete(table_name, condition, data){
-  var query = connection.query(
-      `DELETE FROM ${table_name} WHERE ${condition}=?`,
-      data,
-      function(err, res) {
-        if (err) throw err;
-        console.log(`\n${data} deleted from ${table_name}\n`);
-      }
-    );
-    // logs the actual query being run
-    console.log(query.sql);    
-};
+

@@ -14,7 +14,7 @@ var connection = mysql.createConnection({
 
 const employee = {
   // function view employees
-  viewEmployees: function(){
+  view: function(){
     inquirer.prompt({
       name: "sortby",
       message: "\nview employees by:\n",
@@ -26,11 +26,11 @@ const employee = {
       if (answers.sortby==="view all employees"){
         genericFunc.viewDB("employee");
       } else {
-        employee.viewEmployeesManager();
+        employee.viewManager();
       }
     });
   },
-  viewEmployeesManager: function(){
+  viewManager: function(){
     // declare variables
     let employeeData = "";
     // get data from role table
@@ -51,7 +51,7 @@ const employee = {
       genericFunc.outputTable(employeeData, "employees ordered by manager: ");
     });
   },
-  editEmployees: function(){
+  edit: function(){
     connection.query("SELECT * FROM employee", function(err, res) {
       if (err) throw err;
       let employeeData = res;
@@ -61,6 +61,7 @@ const employee = {
           name: "choice",
           type: "list",
           pageSize: 25,
+          loop: false,
           choices: function() {
             var choiceArray = [];
             for (var i = 0; i < res.length; i++) {
@@ -147,7 +148,7 @@ const employee = {
     });
   });
   },
-  addEmployees: function(){
+  add: function(){
     connection.query("SELECT * FROM employee", function(err, res) {
         if (err) throw err;
         let employeeData = res;
@@ -214,8 +215,38 @@ const employee = {
           });
       })
     });
-  }
-
+  },
+  delete: function(){
+    connection.query("SELECT * FROM employee", function(err, res) {
+        if (err) throw err;
+        inquirer
+        .prompt([
+          {
+            name: "choice",
+            type: "list",
+            pageSize: 25,
+            loop: false,
+            choices: function() {
+              var choiceArray = [];
+              for (var i = 0; i < res.length; i++) {
+                choiceArray.push((res[i].first_name)+" "+(res[i].last_name));
+              }
+              return choiceArray;
+            },
+            message: "\nchoose an employee to delete: "
+          }
+        ])
+        .then(function(answer) {
+          let chosenEmployee;
+          for (var i = 0; i < res.length; i++) {
+            if ((res[i].first_name+" "+res[i].last_name) === answer.choice) {
+              chosenEmployee = res[i];
+            }
+          }
+          genericFunc.mysqlDelete("employee", chosenEmployee.id);
+        })
+    })
+}
 }
 
 module.exports = employee;

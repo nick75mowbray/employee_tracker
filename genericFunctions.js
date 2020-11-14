@@ -30,6 +30,17 @@ viewDB: function(table_name, orderBy = "id", message = ""){
       }
       const table = cTable.getTable(mytable);
       console.log(`\n${table}`);
+  },
+  mysqlDelete: function(table_name, id){
+    var query = connection.query(
+        `DELETE FROM ?? WHERE id=?`,[table_name, id],
+        function(err, res) {
+          if (err) throw err;
+          console.log(`Deleted data with id = ${id} from ${table_name}\n`);
+        }
+      );
+      // logs the actual query being run
+      console.log(query.sql);    
   }
 }
 
