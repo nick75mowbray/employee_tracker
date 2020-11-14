@@ -2,6 +2,8 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql");
 const cTable = require('console.table');
+const employee = require("./employeeFunctions.js");
+const genericFunc = require("./genericFunctions.js");
 
 // mysql connection ------
 var connection = mysql.createConnection({
@@ -48,171 +50,19 @@ function runEmployeeTracker(){
   }).then(function(answers){
     switch (answers.menu){
       case "view employees":
-        viewEmployees();
+        employee.viewEmployees();
         break;
       case "edit employees":
-        editEmployees();
+        employee.editEmployees();
+        break;
+      case "add employees":
+        employee.addEmployees();
         break;
       default:
         break;
     }
   })
 }
-// generic functions
-function viewDB(table_name, orderBy = "id", message = ""){
-  connection.query(`SELECT * FROM ${table_name} ORDER BY ${orderBy}`, function(err, res) {
-    if (err) throw err;
-    // Log all results of the SELECT statement using console.table
-    outputTable(res, message);
-  });
-};
-// function to turn results into a table
-function outputTable(results, message){
-  console.log(`\n${message}`);
-  let mytable = [];
-    for (let i = 0; i < results.length; i++){
-      let tableRow = {};
-      tableRow = results[i];
-      mytable.push(tableRow);
-    }
-    const table = cTable.getTable(mytable);
-    console.log(`\n${table}`);
-};
-// function view employees
-function viewEmployees(){
-  inquirer.prompt({
-    name: "sortby",
-    message: "\nview employees by:\n",
-    type: "list",
-    choices: [
-      "view all employees",
-      "view employees by manager"]
-  }).then(function(answers){
-    if (answers.sortby==="view all employees"){
-      viewDB("employee");
-    } else {
-      // viewDB("employee", "manager_id", "employees ordered by manager: ");
-      viewEmployeesManager();
-    }
-  });
-}
-function viewEmployeesManager(){
-  // declare variables
-  let employeeData = "";
-  // get data from role table
-  connection.query("SELECT * FROM employee ORDER BY manager_id", function(err, res) {
-    if (err) throw err;
-    employeeData = res;
-    for (var i = 0; i < employeeData.length; i++) {
-      for (let j = 0; j < employeeData.length; j++){
-        if (employeeData[i].manager_id===employeeData[j].id){
-          if (employeeData[i].manager_id=="null"){
-            employeeData[i].manager_name = "No Manager";
-          } else{
-              employeeData[i].manager_name = employeeData[j].first_name+" "+employeeData[j].last_name;
-          }
-        }
-      }
-    }
-    outputTable(employeeData, "employees ordered by manager: ");
-  });
-}
-// function to edit employees
-function editEmployees(){
-  connection.query("SELECT * FROM employee", function(err, res) {
-    if (err) throw err;
-    let employeeData = res;
-    inquirer
-    .prompt([
-      {
-        name: "choice",
-        type: "list",
-        pageSize: 25,
-        choices: function() {
-          var choiceArray = [];
-          for (var i = 0; i < res.length; i++) {
-            choiceArray.push((res[i].first_name)+" "+(res[i].last_name));
-          }
-          return choiceArray;
-        },
-        message: "\nchoose an employee to edit: "
-      }
-    ])
-    .then(function(answer) {
-      let chosenEmployee;
-      for (var i = 0; i < res.length; i++) {
-        if ((res[i].first_name+" "+res[i].last_name) === answer.choice) {
-          chosenEmployee = res[i];
-        }
-      }
-      // declare variables
-      let roleData = "";
-      let roleArr = [];
-      // get data from role table
-      connection.query("SELECT * FROM role", function(err, res) {
-        if (err) throw err;
-        roleData = res;
-        for (var i = 0; i < res.length; i++) {
-          roleArr.push(res[i].title);
-        }
-      });
-      
-      inquirer.prompt([
-        {name: "firstname",
-        message: "\nfirst name: ",
-        type: "input",
-        default: chosenEmployee.first_name},
-        {name: "lastname",
-        message: "last name: ",
-        type: "input",
-        default: chosenEmployee.last_name},
-        {name: "role",
-        message: "role: ",
-        type: "list",
-        choices: roleArr},
-        {name: "manager",
-        message: "select manager: ",
-        type: "list",
-        choices: function(){
-          let choiceArray = [];
-          for (var i = 0; i < employeeData.length; i++) {
-            choiceArray.push((employeeData[i].first_name)+" "+(employeeData[i].last_name));
-          }
-          return choiceArray;
-        }}
-      ])
-      .then(function(answer){
-        // add data to object
-        let updateEmployee = {};
-        updateEmployee.first_name = answer.firstname;
-        updateEmployee.last_name = answer.lastname;
-        // find role id based on title
-        for (let i = 0; i < roleData.length; i++){
-          if (answer.role === roleData[i].title){
-            updateEmployee.role_id = roleData[i].id;
-          }
-        }
-        // get employee id based on name
-        for (let i = 0; i < employeeData.length; i++){
-          if (answer.manager === (employeeData[i].first_name)+" "+(employeeData[i].last_name)){
-            updateEmployee.manager_id = employeeData[i].id;
-          }
-        }
-        connection.query( 
-          `UPDATE employee SET first_name='${updateEmployee.first_name}', 
-          last_name='${updateEmployee.last_name}', 
-          role_id='${updateEmployee.role_id}', 
-          manager_id='${updateEmployee.manager_id}' 
-          WHERE id='${chosenEmployee.id}';`, 
-        function(err, res) {
-          if (err) throw err;
-          console.log(`successfully updated employee ${updateEmployee.first_name} ${updateEmployee.last_name}`);
-        });
-      })
-
-  });
-});
-};
 
 // add department
 function addDepartment(){
