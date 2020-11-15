@@ -5,6 +5,7 @@ const cTable = require('console.table');
 const employee = require("./employeeFunctions.js");
 const genericFunc = require("./genericFunctions.js");
 const role = require("./roleFunctions.js");
+const department = require("./departmentFunctions.js");
 
 // mysql connection ------
 var connection = mysql.createConnection({
@@ -74,121 +75,30 @@ function runEmployeeTracker(){
       case "delete roles":
         role.delete();
         break;
+      case "view departments":
+        genericFunc.viewDB("department");
+        break;
+      case "edit departments":
+        department.edit();
+        break;
+      case "add departments":
+        department.add();
+        break;
+      case "delete departments":
+        department.delete();
+        break;
+      case "view budget":
+        viewBudget();
+        break;
       default:
         break;
     }
   })
 }
 
-// add department
-function addDepartment(){
-  console.log(`\n`);
-  inquirer.prompt([
-    {
-    name: "name",
-    message: "department name: ",
-    type: "input"
-  },
-]).then(function(answers){
-  console.log(`Adding ${answers.name} to database...\n`);
-    var query = connection.query(
-      "INSERT INTO department SET ?",
-      {department_name: answers.name},
-      function(err, res) {
-        if (err) throw err;
-        // console.log(res.affectedRows + " department added successfully!\n");
-      }
-    );
-    // logs the actual query being run
-    console.log(query.sql);
-    // return to menu
-    runEmployeeTracker();
-  })
-};
-
-// add role
-function addRole(){
-  // read departments in database
-  getDepartments();
-  // ask questions
-  addRoleQuestions();
+// view budget
+function viewBudget(){
+  // connection.query("SELECT")
 }
-// function for add roles questions
-function addRoleQuestions(){
-  console.log(`departements array: ${departmentsArr}`);
-  // put department names in array for display
-  let departmentChoices = [];
-  for (let i = 0; i < departmentsArr.length; i++){
-    departmentChoices.push(departmentsArr[i].department_name);
-  }
-  console.log(`\n`);
-
-  inquirer.prompt([
-    {
-    name: "title",
-    message: "role title: ",
-    type: "input"
-  },{
-    name: "salary",
-    message: "role salary: ",
-    type: "number",
-  },{
-    name: "department",
-    message: "department: ",
-    type: "list",
-    // display departments retrieved from db
-    choices: departmentChoices
-  }
-]).then(function(answers){
-  console.log(`Adding ${answers.title} to database...\n`);
-  // get id of selected dapartment
-  let departmentID = 0;
-  for (let i = 0; i < departmentsArr.length; i++){
-    if (answers.department==departmentArr[i].department_name){
-      departmentID = departmentArr[i].id;
-    }
-  }
-    var query = connection.query(
-      "INSERT INTO department SET ?",
-      {title: answers.title,
-      salary: answers.salary,
-      department_id: departmentID},
-      function(err, res) {
-        if (err) throw err;
-        // console.log(res.affectedRows + " department added successfully!\n");
-      }
-    );
-    // logs the actual query being run
-    console.log(query.sql);
-    // return to menu
-    runEmployeeTracker();
-  })
-};
-
-// function to retrieve departments from db
-function getDepartments(){
-  connection.query("SELECT * FROM department", function(err, res) {
-    if (err) throw err;
-    // Log all results of the SELECT statement
-    departmentsArr = res;
-      console.log(`departments in db: ${departmentsArr}`);
-      connection.end();
-      return departmentsArr;
-  });
-
-};
-
-function mysqlInsert(table_name, data_object){
-  var query = connection.query(
-      `INSERT INTO ${table_name} SET ?`,
-      data_object,
-      function(err, res) {
-        if (err) throw err;
-        console.log(`\nsuccessfully added into ${table_name}\n`);
-      }
-    );
-    // logs the actual query being run
-    console.log(query.sql);    
-};
 
 
