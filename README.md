@@ -4,7 +4,7 @@
 ## Description
 This application is an employee tracker that uses mysql to modify data on the database and takes input through the command line using inquirer.
 ![demo](/assets/employee_tracker_demo.gif)   
-[link to video on google drive](https://drive.google.com/file/d/1uGUUOq_ldnSL-wOvx7OgW993K4wIq8sV/view)
+[link to video on google drive](https://drive.google.com/file/d/1uGUUOq_ldnSL-wOvx7OgW993K4wIq8sV/view)   
 [link to YouTube demonstration](https://youtu.be/GiwyWNCMKGc)
 
 ## Table of Contents
