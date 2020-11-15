@@ -68,6 +68,12 @@ function runEmployeeTracker(){
       case "edit roles":
         role.edit();
         break;
+      case "add roles":
+        role.add();
+        break;
+      case "delete roles":
+        role.delete();
+        break;
       default:
         break;
     }
